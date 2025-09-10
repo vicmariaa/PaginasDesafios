@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcular Despesas</title>
+    
+</head>
+<body>
+
+    <label for="salario">Salário</label><br></br>
+    <input type="number" id="salario" placeholder="Digite seu salário"> <br></br>
+
+    <label for="despesa1">Despesa 1</label><br></br>
+    <input type="number" id="despesa1" placeholder="Digite a despesa 1"><br></br>
+
+    <label for="despesa2">Despesa 2</label><br></br>
+    <input type="number" id="despesa2" placeholder="Digite a despesa 2"><br></br>
+
+    <label for="despesa3">Despesa 3</label><br></br>
+    <input type="number" id="despesa3" placeholder="Digite a despesa 3"><br></br>
+
+    <button onclick="calcular()">Calcular</button>
+
+    <div id="result"></div>
+
+    <script>
+        function calcular() {
+            const salario = parseFloat(document.getElementById('salario').value) || 0;
+            const despesa1 = parseFloat(document.getElementById('despesa1').value) || 0;
+            const despesa2 = parseFloat(document.getElementById('despesa2').value) || 0;
+            const despesa3 = parseFloat(document.getElementById('despesa3').value) || 0;
+
+            const totalDespesas = despesa1 + despesa2 + despesa3;
+            const saldo = salario - totalDespesas;
+
+            document.getElementById('result').innerText =
+                `Total de Despesas: R$${totalDespesas.toFixed(2)} \nSaldo Restante: R$${saldo.toFixed(2)}`;
+        }
+    </script>
+
+</body>
+</html>

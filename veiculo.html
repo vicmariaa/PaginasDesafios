@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Escolha seu Veículo</title>
+  <link rel="stylesheet" href="style(3).css">
+</head>
+<body>
+  <header>
+    <h1>Escolha seu Veículo</h1>
+  </header>
+
+  <main>
+    <section class="veiculos">
+      <div class="veiculo">
+        <img src="https://via.placeholder.com/200x100" alt="Veículo 1">
+        <p>Carro Econômico</p>
+        <button onclick="selecionarVeiculo('Carro Econômico')">Selecionar</button>
+      </div>
+      <div class="veiculo">
+        <img src="https://via.placeholder.com/200x100" alt="Veículo 2">
+        <p>SUV Luxo</p>
+        <button onclick="selecionarVeiculo('SUV Luxo')">Selecionar</button>
+      </div>
+    </section>
+
+    <section id="formulario" style="display:none;">
+      <h2>Dados do Motorista</h2>
+      <form id="formMotorista">
+        <label>Nome do Motorista:</label>
+        <input type="text" id="nomeMotorista" required><br>
+
+        <label>Número da CNH:</label>
+        <input type="text" id="cnhMotorista" required><br>
+
+        <button type="submit">Finalizar Aluguel</button>
+      </form>
+    </section>
+
+    <p id="mensagemSucesso" class="sucesso"></p>
+  </main>
+
+  <script src="script(3).js"></script>
+</body>
+</html>

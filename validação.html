@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Validação de E-mail</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #c9d6ff, #e2e2e2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      animation: fadeIn 1s ease-in;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input[type="email"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #4e73df;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #375ac3;
+    }
+
+    #mensagem {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Verificador de E-mail</h2>
+
+    <input type="email" id="email" placeholder="Digite seu e-mail">
+    <button onclick="validarEmail()">Validar</button>
+
+    <p id="mensagem"></p>
+  </div>
+
+  <script>
+    function validarEmail() {
+      const email = document.getElementById("email").value.trim();
+      const mensagem = document.getElementById("mensagem");
+
+      const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+      if (regex.test(email)) {
+        mensagem.textContent = `✔ O e-mail "${email}" é VÁLIDO.`;
+        mensagem.style.color = "#28a745";
+      } else {
+        mensagem.textContent = `✖ O e-mail "${email}" é INVÁLIDO.`;
+        mensagem.style.color = "#dc3545";
+      }
+    }
+  </script>
+
+</body>
+</html>

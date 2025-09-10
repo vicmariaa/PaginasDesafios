@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriveEasy Rent a Car</title>
+    <link rel="stylesheet" href="style(3).css">
+    <link rel="stylesheet" href="veiculo.html"
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Cabeçalho fixo -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-car"></i>
+            <h1>Drive<span>Easy</span> Rent a Car</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="nav-link active" data-page="home">Início</a></li>
+                <li><a href="#" class="nav-link" data-page="vehicles">Veículos</a></li>
+                <li><a href="#" class="nav-link" data-page="about">Sobre Nós</a></li>
+                <li><a href="#" class="nav-link" data-page="contact">Contato</a></li>
+            </ul>
+        </nav>
+        <div class="user-controls">
+            <button class="login-btn" id="login-btn">
+                <i class="fas fa-user"></i> <span id="user-status">Entrar</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <div class="container">
+        <!-- Páginas serão carregadas aqui -->
+    </div>
+
+    <!-- Rodapé -->
+    <footer>
+        <p>
+            <i class="far fa-copyright"></i> 2023 DriveEasy Rent a Car - Todos os direitos reservados
+        </p>
+    </footer>
+
+    <!-- Modal de Login -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h2>Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username"><i class="fas fa-user"></i> Usuário</label>
+                    <input type="text" id="username" placeholder="Digite seu usuário" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Senha</label>
+                    <input type="password" id="password" placeholder="Digite sua senha" required>
+                </div>
+                
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+                <p style="text-align: center; margin-top: 20px;">
+                    <a href="#" id="register-link">Criar uma conta</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script src="script(4).js"></script>
+</body>
+</html>

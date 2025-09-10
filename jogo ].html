@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo de Carro</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #e0e0e0;
+      overflow: hidden;
+    }
+
+    .tela {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .tela h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .btn {
+      background-color: #333;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      margin: 10px;
+      font-size: 18px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #555;
+    }
+
+    canvas {
+      display: block;
+      margin: 20px auto;
+      background-color: #999;
+      border: 2px solid #333;
+      z-index: 1;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      z-index: 2;
+      display: none;
+    }
+
+    #restartBtn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #333;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: none;
+      z-index: 3;
+    }
+
+    #restartBtn:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div id="telaInicio" class="tela">
+    <h1>Jogo de Carro</h1>
+    <button class="btn" onclick="mostrarDificuldades()">Jogar</button>
+  </div>
+
+  <div id="telaDificuldade" class="tela" style="display:none;">
+    <h1>Escolha a Dificuldade</h1>
+    <button class="btn" onclick="iniciarJogo('facil')">Fácil</button>
+    <button class="btn" onclick="iniciarJogo('medio')">Médio</button>
+    <button class="btn" onclick="iniciarJogo('dificil')">Difícil</button>
+  </div>
+
+  <div id="score">Pontuação: 0</div>
+  <button id="restartBtn" onclick="reiniciarJogo()">Reiniciar</button>
+  <canvas id="gameCanvas" width="400" height="600" style="display:none;"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+    const restartBtn = document.getElementById("restartBtn");
+
+    // Sons
+    const musicaFundo = new Audio("fundo.mp3");
+    musicaFundo.loop = true;
+    musicaFundo.volume = 0.3;
+
+    const somColisao = new Audio(".sons/colisao.mp3");
+    const somPonto = new Audio(".sons/ponto.mp3");
+    const buzina = new Audio(".sons/buzina.mp3");
+
+    let carro, obstaculos, pontuacao, dificuldade, velocidadeObstaculo;
+    let jogoAtivo = false;
+    let faixaOffset = 0;
+    let intervaloObstaculos;
+    let ultimoFrame = 0;
+    let proximoAvisoPonto = 50;
+
+    function mostrarDificuldades() {
+      document.getElementById("telaInicio").style.display = "none";
+      document.getElementById("telaDificuldade").style.display = "flex";
+    }
+
+    function iniciarJogo(nivel) {
+      dificuldade = nivel;
+      velocidadeObstaculo = nivel === "facil" ? 3 : nivel === "medio" ? 5 : 8;
+
+      document.getElementById("telaDificuldade").style.display = "none";
+      canvas.style.display = "block";
+      scoreDisplay.style.display = "block";
+      restartBtn.style.display = "none";
+
+      carro = { x: 175, y: 500, width: 50, height: 80, cor: "#0077cc", velocidade: 6 };
+      obstaculos = [];
+      pontuacao = 0;
+      faixaOffset = 0;
+      jogoAtivo = true;
+      ultimoFrame = performance.now();
+      scoreDisplay.textContent = "Pontuação: 0";
+      proximoAvisoPonto = 50;
+
+      clearInterval(intervaloObstaculos);
+      intervaloObstaculos = setInterval(() => criarObstaculo(), 1500);
+
+      musicaFundo.currentTime = 0;
+      musicaFundo.play();
+    }
+
+    function reiniciarJogo() {
+      iniciarJogo(dificuldade);
+    }
+
+    function criarObstaculo() {
+      if (jogoAtivo) {
+        const x = Math.random() * (canvas.width - 50);
+        obstaculos.push({ x, y: -80, width: 50, height: 80 });
+      }
+    }
+
+    function desenharFaixas() {
+      ctx.fillStyle = "#fff";
+      for (let i = 0; i < canvas.height; i += 40) {
+        ctx.fillRect(canvas.width / 2 - 5, (i + faixaOffset) % canvas.height, 10, 20);
+      }
+    }
+
+    function desenharCarro() {
+      ctx.fillStyle = carro.cor;
+      ctx.fillRect(carro.x, carro.y, carro.width, carro.height);
+    }
+
+    function desenharObstaculos() {
+      ctx.fillStyle = "#cc0000";
+      obstaculos.forEach(obs => {
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      });
+    }
+
+    function moverObstaculos() {
+      obstaculos.forEach(obs => obs.y += velocidadeObstaculo);
+      obstaculos = obstaculos.filter(obs => obs.y < canvas.height);
+    }
+
+    function detectarColisao() {
+      for (let obs of obstaculos) {
+        if (
+          carro.x < obs.x + obs.width &&
+          carro.x + carro.width > obs.x &&
+          carro.y < obs.y + obs.height &&
+          carro.y + carro.height > obs.y
+        ) {
+          jogoAtivo = false;
+          restartBtn.style.display = "block";
+          clearInterval(intervaloObstaculos);
+          somColisao.play();
+          musicaFundo.pause();
+        }
+      }
+    }
+
+    function atualizarPontuacao(delta) {
+      if (jogoAtivo) {
+        pontuacao += delta * 0.01;
+        scoreDisplay.textContent = "Pontuação: " + Math.floor(pontuacao);
+
+        if (pontuacao >= proximoAvisoPonto) {
+          somPonto.play();
+          proximoAvisoPonto += 50;
+        }
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if (!jogoAtivo) return;
+
+      // Movimentação do carro
+      if (e.key === "ArrowLeft" && carro.x > 0) carro.x -= carro.velocidade;
+      if (e.key === "ArrowRight" && carro.x < canvas.width - carro.width) carro.x += carro.velocidade;
+
+      // Tocar buzina com a tecla "B"
+      if (e.key.toLowerCase() === "B") {
+        buzina.currentTime = 0;
+        buzina.play();
+      }
+    });
+
+    function loop(timestamp) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      faixaOffset += 5;
+      desenharFaixas();
+
+      const delta = timestamp - ultimoFrame;
+      ultimoFrame = timestamp;
+
+      if (jogoAtivo) {
+        desenharCarro();
+        desenharObstaculos();
+        moverObstaculos();
+        detectarColisao();
+        atualizarPontuacao(delta);
+      } else if (carro) {
+        desenharCarro();
+        desenharObstaculos();
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

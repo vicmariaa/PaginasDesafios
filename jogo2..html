@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Corrida em Primeira Pessoa</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #333;
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 22px;
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">Pontuação: 0</div>
+  <canvas id="game" width="400" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const info = document.getElementById("info");
+
+    let posX = 0; // posição lateral do jogador
+    let pontuacao = 0;
+    let ativo = true;
+    let obstaculos = [];
+    let linhas = [];
+
+    // cria linhas da estrada
+    for (let i = 0; i < 20; i++) {
+      linhas.push({ y: i * 40 });
+    }
+
+    function criarObstaculo() {
+      obstaculos.push({
+        x: Math.random() * 200 - 100, // posição lateral
+        y: -100, // começa fora da tela
+        width: 60,
+        height: 100
+      });
+    }
+
+    function desenharEstrada() {
+      ctx.fillStyle = "#222";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // faixas laterais
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(80, 0);
+      ctx.lineTo(80, canvas.height);
+      ctx.moveTo(320, 0);
+      ctx.lineTo(320, canvas.height);
+      ctx.stroke();
+    }
+
+    function desenharLinhas() {
+      ctx.fillStyle = "white";
+      linhas.forEach(l => {
+        ctx.fillRect(canvas.width/2 - 5, l.y, 10, 30);
+      });
+    }
+
+    function moverLinhas() {
+      linhas.forEach(l => {
+        l.y += 10;
+        if (l.y > canvas.height) l.y = -40;
+      });
+    }
+
+    function desenharObstaculos() {
+      ctx.fillStyle = "red";
+      obstaculos.forEach(o => {
+        ctx.fillRect(canvas.width/2 + o.x - o.width/2, o.y, o.width, o.height);
+      });
+    }
+
+    function moverObstaculos() {
+      obstaculos.forEach(o => o.y += 6);
+      obstaculos = obstaculos.filter(o => o.y < canvas.height + 100);
+    }
+
+    function desenharJogador() {
+      ctx.fillStyle = "blue";
+      ctx.fillRect(canvas.width/2 + posX - 25, canvas.height - 120, 50, 100);
+    }
+
+    function colisao() {
+      const jogador = {
+        x: canvas.width/2 + posX - 25,
+        y: canvas.height - 120,
+        w: 50,
+        h: 100
+      };
+
+      for (let o of obstaculos) {
+        const ox = canvas.width/2 + o.x - o.width/2;
+        if (
+          jogador.x < ox + o.width &&
+          jogador.x + jogador.w > ox &&
+          jogador.y < o.y + o.height &&
+          jogador.y + jogador.h > o.y
+        ) {
+          ativo = false;
+          info.textContent = "💥 GAME OVER | Pontuação: " + Math.floor(pontuacao);
+        }
+      }
+    }
+
+    function atualizar() {
+      if (!ativo) return;
+
+      pontuacao += 0.1;
+      info.textContent = "Pontuação: " + Math.floor(pontuacao);
+
+      desenharEstrada();
+      moverLinhas();
+      desenharLinhas();
+      moverObstaculos();
+      desenharObstaculos();
+      desenharJogador();
+      colisao();
+
+      requestAnimationFrame(atualizar);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (!ativo) return;
+      if (e.key === "ArrowLeft" && posX > -100) posX -= 20;
+      if (e.key === "ArrowRight" && posX < 100) posX += 20;
+    });
+
+    setInterval(() => {
+      if (ativo) criarObstaculo();
+    }, 1500);
+
+    atualizar();
+  </script>
+</body>
+</html>

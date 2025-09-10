@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Página 2 – Exemplo de Aplicação Web</title>
+   <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #e3f2fd, #e0f7fa);
+            padding: 40px;
+            margin: 0;
+            color: #333;
+        }
+        h1, h2 {
+            color: #0277bd;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #0288d1;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background-color: #0277bd;
+        }
+        #resultado {
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .text {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 40px;
+            font-size: 18px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+   </style>
+</head>
+<body>
+
+   <h1 style="text-align: center;">Página 2 – Aplicação Web com JavaScript</h1>
+
+   <div class="container">
+        <h2>Calculadora de IMC</h2>
+        <label for="peso">Peso (kg):</label>
+        <input type="number" id="peso" placeholder="Ex: 70.5">
+
+        <label for="altura">Altura (m):</label>
+        <input type="number" id="altura" placeholder="Ex: 1.75">
+
+        <button onclick="calcularIMC()">Calcular IMC</button>
+        <div id="resultado"></div>
+   </div>
+
+   <div class="text">
+      <h2>Como Funciona</h2>
+      <p>O HTML fornece os campos e o botão. O JavaScript faz o cálculo do IMC e mostra o resultado na própria página.</p>
+
+      <h2>Explicação do Código</h2>
+      <ul>
+         <li><strong>HTML:</strong> Cria a interface com campos de entrada e botão.</li>
+         <li><strong>JavaScript:</strong> Lê os dados, calcula o IMC e atualiza a tela.</li>
+         <li><strong>Tudo no Frontend:</strong> Nenhum dado vai para o servidor.</li>
+      </ul>
+
+      <h2>Vantagem</h2>
+      <p>Esse tipo de aplicação é simples e roda direto no navegador. Ideal para ferramentas rápidas e interativas.</p>
+
+      <h2>Comparação com Python</h2>
+      <p>Python no backend (como mostrado na Página 1) exige um servidor rodando, mas permite interações mais complexas e acesso a banco de dados. Já o JavaScript com HTML roda sozinho no navegador, sem backend.</p>
+   </div>
+
+   <a href="index.html">← Voltar para a Página 1 – Explicações</a>
+
+   <script>
+        function calcularIMC() {
+            const peso = parseFloat(document.getElementById('peso').value);
+            const altura = parseFloat(document.getElementById('altura').value);
+            const resultadoDiv = document.getElementById('resultado');
+
+            if (isNaN(peso) || isNaN(altura) || peso <= 0 || altura <= 0) {
+                resultadoDiv.textContent = "Por favor, insira peso e altura válidos.";
+                return;
+            }
+
+            const imc = peso / (altura * altura);
+            resultadoDiv.textContent = `Seu IMC é: ${imc.toFixed(2)}`;
+        }
+   </script>
+
+</body>
+</html>

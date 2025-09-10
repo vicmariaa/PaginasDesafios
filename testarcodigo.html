@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testar os valores</title>
+</head>
+<body>
+    <button onclick="testar()">Clique aqui para testar</button>
+
+    <script>
+        let n = 3;
+        n += 2;
+        window.alert(n);  
+
+        function testar() {
+            let N = 30; 
+
+            if (N >= 25) {
+                window.alert('O valor de N é MAIOR que 25!');
+            } else {
+                window.alert('O valor de N é menor que 25!');
+            }
+
+            N = 70;
+            if (N >= 200) {
+                window.alert('O valor de N é MAIOR que 200!');
+            }
+
+            if (N >= 100) {
+                window.alert('O valor de N é MAIOR que 100!');
+            } else {
+                window.alert('O valor de N é MENOR que 100!');
+            }
+
+            if (n >= 100) {
+                window.alert('O valor de n é MAIOR que 100!');
+            } else {
+                window.alert('O valor de n é MENOR que 100!');
+            }
+        }
+    </script>
+</body>
+</html>
