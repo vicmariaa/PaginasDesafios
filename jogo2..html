@@ -1,155 +1,273 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Corrida em Primeira Pessoa</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Horizon Chase – Estrada Infinita</title>
   <style>
-    body {
-      margin: 0;
-      background: black;
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-      margin: auto;
-      background: #333;
-    }
-    #info {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: white;
-      font-size: 22px;
-      font-family: Arial, sans-serif;
-    }
+    body { margin:0; overflow:hidden; background: linear-gradient(#87ceeb,#e0f7fa); font-family: Arial, sans-serif; }
+    #score { position:absolute; top:18px; left:18px; z-index:30; color:#000; font-weight:800; font-size:20px; text-shadow:0 2px 6px #fff; }
+    #hud { position:absolute; right:18px; top:18px; z-index:30; color:#000; text-align:right; }
+    #gameOverScreen { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); color:#fff; flex-direction:column; gap:12px; font-size:20px; z-index:50; }
+    #gameOverScreen h1 { font-size:48px; margin:0; color:#ff3333; text-shadow:0 2px 8px #000; }
+    #gameOverScreen button { padding:10px 18px; font-size:18px; border-radius:8px; border:0; background:#ff3333; color:#fff; cursor:pointer; }
   </style>
 </head>
 <body>
-  <div id="info">Pontuação: 0</div>
-  <canvas id="game" width="400" height="600"></canvas>
+  <div id="score">Pontos: 0</div>
+  <div id="hud">
+    <div id="time">Tempo: 0s</div>
+    <div id="level">Nível: 1</div>
+  </div>
 
+  <div id="gameOverScreen">
+    <h1>GAME OVER</h1>
+    <p id="finalScore">Pontuação: 0</p>
+    <div style="display:flex;gap:12px">
+      <button id="btnRestart">Reiniciar</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
   <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
-    const info = document.getElementById("info");
+    // ===== Sons =====
+    const audio = {
+      fundo: new Audio("fundo.mp3"),
+      colisao: new Audio("colisao.mp3"),
+      ponto: new Audio("ponto.mp3"),
+      buzina: new Audio("buzina.mp3")
+    };
+    audio.fundo.loop = true;
+    audio.fundo.volume = 0.3;
 
-    let posX = 0; // posição lateral do jogador
-    let pontuacao = 0;
-    let ativo = true;
-    let obstaculos = [];
-    let linhas = [];
+    document.addEventListener("keydown", () => {
+      if(audio.fundo.paused) audio.fundo.play();
+    }, { once:true });
 
-    // cria linhas da estrada
-    for (let i = 0; i < 20; i++) {
-      linhas.push({ y: i * 40 });
+    // ===== Cena =====
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 15, 25);
+
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Luzes
+    scene.add(new THREE.HemisphereLight(0xffffbb, 0x228B22, 1.0));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5,20,10);
+    scene.add(dirLight);
+
+    // ===== Estrada =====
+    const ROAD_W = 12, ROAD_SEG_LEN = 80, NUM_ROAD_SEGS = 12;
+    const roadSegments = [];
+    for(let i=0;i<NUM_ROAD_SEGS;i++){
+      const road = new THREE.Mesh(
+        new THREE.PlaneGeometry(ROAD_W, ROAD_SEG_LEN),
+        new THREE.MeshPhongMaterial({color:0x333333})
+      );
+      road.rotation.x = -Math.PI/2;
+      road.position.z = -i*ROAD_SEG_LEN;
+      scene.add(road);
+      roadSegments.push(road);
     }
 
-    function criarObstaculo() {
-      obstaculos.push({
-        x: Math.random() * 200 - 100, // posição lateral
-        y: -100, // começa fora da tela
-        width: 60,
-        height: 100
+    // ===== Faixas =====
+    const stripes = [];
+    function createStripe(x,z){
+      const s = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.3,5),
+        new THREE.MeshBasicMaterial({color:0xffffff})
+      );
+      s.rotation.x = -Math.PI/2;
+      s.position.set(x,0.02,z);
+      scene.add(s);
+      stripes.push(s);
+    }
+    for(let i=0;i<200;i+=6) createStripe(0,-i*3);
+
+    // ===== Grama =====
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(400,2000),
+      new THREE.MeshPhongMaterial({color:0x228B22})
+    );
+    ground.rotation.x = -Math.PI/2;
+    ground.position.y = -0.01;
+    scene.add(ground);
+
+    // ===== Árvores =====
+    const arvores = [];
+    function createTree(x,z){
+      const tronco = new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,2), new THREE.MeshPhongMaterial({color:0x8B4513}));
+      const copa = new THREE.Mesh(new THREE.SphereGeometry(1.2,8,8), new THREE.MeshPhongMaterial({color:0x006400}));
+      tronco.position.set(x,1,z);
+      copa.position.set(0,1.8,0);
+      tronco.add(copa);
+      scene.add(tronco);
+      arvores.push(tronco);
+    }
+    for(let i=0;i<40;i++){
+      const side = Math.random()<0.5?-1:1;
+      const x = side*(ROAD_W/2 + 4 + Math.random()*12);
+      const z = -i*20 - 10;
+      createTree(x,z);
+    }
+
+    // ===== Pedras =====
+    const pedras = [];
+    function createRock(x,z){
+      const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.5+Math.random()*1.5),
+                               new THREE.MeshPhongMaterial({color:0x808080}));
+      r.position.set(x,0.5,z);
+      scene.add(r);
+      pedras.push(r);
+    }
+    for(let i=0;i<20;i++){
+      const side = Math.random()<0.5?-1:1;
+      const x = side*(ROAD_W/2 + 2 + Math.random()*10);
+      const z = -i*30 - 15;
+      createRock(x,z);
+    }
+
+    // ===== Jogador =====
+    const player = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.4,0.6,4.2), new THREE.MeshPhongMaterial({color:0x3366cc}));
+    body.position.y=0.6; player.add(body);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.8,0.8,2.2), new THREE.MeshPhongMaterial({color:0x111111, transparent:true, opacity:0.75}));
+    cabin.position.y=1; player.add(cabin);
+    player.position.set(0,0,5); scene.add(player);
+
+    // ===== NPCs =====
+    const npcs=[];
+    function spawnNpc(z){
+      const g=new THREE.Group();
+      const b=new THREE.Mesh(new THREE.BoxGeometry(2.0,0.6,3.2), new THREE.MeshPhongMaterial({ color: Math.random()*0xffffff }));
+      b.position.y=0.5; g.add(b);
+      const lane = Math.floor(Math.random()*3);
+      g.userData = { lane, z: z || -200 - Math.random()*200, type:'npc', passed:false };
+      g.position.set((lane-1)*(ROAD_W/3),0,g.userData.z);
+      scene.add(g); npcs.push(g);
+    }
+    for(let i=0;i<6;i++) spawnNpc(-i*40-60);
+
+    // ===== Variáveis do jogo =====
+    let running=true, score=0, startTime=performance.now(), level=1, speed=0, maxSpeed=600/3.6;
+    const scoreEl=document.getElementById('score');
+    const timeEl=document.getElementById('time');
+    const levelEl=document.getElementById('level');
+    const gameOverScreen=document.getElementById('gameOverScreen');
+    const finalScore=document.getElementById('finalScore');
+
+    // ===== Controles =====
+    let keys={};
+    document.addEventListener('keydown', e => {
+        keys[e.key] = true;
+
+        // Buzina na tecla "B"
+        if(e.key === "b" || e.key === "B"){
+            audio.buzina.currentTime = 0;
+            audio.buzina.play();
+        }
+    });
+    document.addEventListener('keyup', e => keys[e.key] = false);
+
+    const clock=new THREE.Clock();
+
+    function animate(){
+      if(!running) return;
+      requestAnimationFrame(animate);
+      const dt=clock.getDelta();
+      update(dt);
+      renderer.render(scene,camera);
+    }
+
+    function update(dt){
+      // velocidade
+      if(keys['ArrowUp']) speed += 150*dt; else speed -= 50*dt;
+      speed = Math.max(0, Math.min(maxSpeed, speed));
+      const move = speed*dt;
+
+      // estrada infinita
+      roadSegments.forEach(seg=>{
+        seg.position.z += move;
+        if(seg.position.z > ROAD_SEG_LEN/2) seg.position.z -= ROAD_SEG_LEN*NUM_ROAD_SEGS;
       });
-    }
 
-    function desenharEstrada() {
-      ctx.fillStyle = "#222";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // faixas laterais
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(80, 0);
-      ctx.lineTo(80, canvas.height);
-      ctx.moveTo(320, 0);
-      ctx.lineTo(320, canvas.height);
-      ctx.stroke();
-    }
-
-    function desenharLinhas() {
-      ctx.fillStyle = "white";
-      linhas.forEach(l => {
-        ctx.fillRect(canvas.width/2 - 5, l.y, 10, 30);
+      // faixas
+      stripes.forEach(s=>{
+        s.position.z += move;
+        if(s.position.z>40) s.position.z-=600;
       });
-    }
 
-    function moverLinhas() {
-      linhas.forEach(l => {
-        l.y += 10;
-        if (l.y > canvas.height) l.y = -40;
+      // árvores e pedras
+      arvores.concat(pedras).forEach(obj=>{
+        obj.position.z += move;
+        if(obj.position.z>60) obj.position.z -= 800;
       });
-    }
 
-    function desenharObstaculos() {
-      ctx.fillStyle = "red";
-      obstaculos.forEach(o => {
-        ctx.fillRect(canvas.width/2 + o.x - o.width/2, o.y, o.width, o.height);
-      });
-    }
+      // jogador
+      const limit = ROAD_W/2-1.2;
+      if(keys['ArrowLeft']) player.position.x -= 0.8*dt*60;
+      if(keys['ArrowRight']) player.position.x += 0.8*dt*60;
+      player.position.x = Math.max(-limit, Math.min(limit, player.position.x));
+      if(keys['ArrowDown']) speed -= 80*dt; speed = Math.max(0,speed);
 
-    function moverObstaculos() {
-      obstaculos.forEach(o => o.y += 6);
-      obstaculos = obstaculos.filter(o => o.y < canvas.height + 100);
-    }
+      // NPCs
+      for(let i=npcs.length-1;i>=0;i--){
+        const npc=npcs[i];
+        npc.userData.z += move - 8*dt;
+        npc.position.z = npc.userData.z;
 
-    function desenharJogador() {
-      ctx.fillStyle = "blue";
-      ctx.fillRect(canvas.width/2 + posX - 25, canvas.height - 120, 50, 100);
-    }
+        const dz = npc.position.z - player.position.z;
+        const dx = npc.position.x - player.position.x;
 
-    function colisao() {
-      const jogador = {
-        x: canvas.width/2 + posX - 25,
-        y: canvas.height - 120,
-        w: 50,
-        h: 100
-      };
+        if(dz>-2 && dz<6 && Math.abs(dx)<1.6){ endGame(); return; }
 
-      for (let o of obstaculos) {
-        const ox = canvas.width/2 + o.x - o.width/2;
-        if (
-          jogador.x < ox + o.width &&
-          jogador.x + jogador.w > ox &&
-          jogador.y < o.y + o.height &&
-          jogador.y + jogador.h > o.y
-        ) {
-          ativo = false;
-          info.textContent = "💥 GAME OVER | Pontuação: " + Math.floor(pontuacao);
+        if(npc.position.z>40){
+          scene.remove(npc);
+          npcs.splice(i,1);
+          spawnNpc(-300 - Math.random()*300);
+          score += 100;
+          audio.ponto.currentTime=0;
+          audio.ponto.play();
         }
       }
+
+      // HUD
+      score += speed*dt*0.5;
+      scoreEl.textContent=`Pontos: ${Math.floor(score)}`;
+      const elapsed = Math.floor((performance.now()-startTime)/1000);
+      timeEl.textContent=`Tempo: ${elapsed}s`;
+      const newLevel = Math.floor(elapsed/20)+1;
+      if(newLevel!==level){ level=newLevel; levelEl.textContent=`Nível: ${level}`; }
+
+      // câmera
+      camera.position.x += (player.position.x - camera.position.x)*dt*3;
+      camera.position.y = 15;
+      camera.position.z = 25 - Math.min(10,speed*0.05);
+      camera.lookAt(player.position.x,1.2,player.position.z-6);
     }
 
-    function atualizar() {
-      if (!ativo) return;
-
-      pontuacao += 0.1;
-      info.textContent = "Pontuação: " + Math.floor(pontuacao);
-
-      desenharEstrada();
-      moverLinhas();
-      desenharLinhas();
-      moverObstaculos();
-      desenharObstaculos();
-      desenharJogador();
-      colisao();
-
-      requestAnimationFrame(atualizar);
+    function endGame(){
+      running=false;
+      audio.colisao.currentTime=0;
+      audio.colisao.play();
+      finalScore.textContent=`Pontuação: ${Math.floor(score)}`;
+      gameOverScreen.style.display='flex';
+      audio.fundo.pause();
     }
 
-    document.addEventListener("keydown", e => {
-      if (!ativo) return;
-      if (e.key === "ArrowLeft" && posX > -100) posX -= 20;
-      if (e.key === "ArrowRight" && posX < 100) posX += 20;
+    document.getElementById('btnRestart').addEventListener('click',()=>{
+      npcs.forEach(n=>scene.remove(n)); npcs.length=0;
+      for(let i=0;i<6;i++) spawnNpc(-i*40-60);
+      score=0; startTime=performance.now(); level=1; speed=0; running=true;
+      gameOverScreen.style.display='none';
+      audio.fundo.currentTime=0; audio.fundo.play();
+      animate();
     });
 
-    setInterval(() => {
-      if (ativo) criarObstaculo();
-    }, 1500);
-
-    atualizar();
+    animate();
   </script>
 </body>
 </html>
