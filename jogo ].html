@@ -83,6 +83,19 @@
     #restartBtn:hover {
       background-color: #555;
     }
+
+    /* Feedback da buzina */
+    #buzinaMsg {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 22px;
+      font-weight: bold;
+      color: #ff0000;
+      z-index: 3;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -99,6 +112,7 @@
   </div>
 
   <div id="score">Pontuação: 0</div>
+  <div id="buzinaMsg">🚗 Buzina!</div>
   <button id="restartBtn" onclick="reiniciarJogo()">Reiniciar</button>
   <canvas id="gameCanvas" width="400" height="600" style="display:none;"></canvas>
 
@@ -107,15 +121,16 @@
     const ctx = canvas.getContext("2d");
     const scoreDisplay = document.getElementById("score");
     const restartBtn = document.getElementById("restartBtn");
+    const buzinaMsg = document.getElementById("buzinaMsg");
 
     // Sons
     const musicaFundo = new Audio("fundo.mp3");
     musicaFundo.loop = true;
     musicaFundo.volume = 0.3;
 
-    const somColisao = new Audio(".sons/colisao.mp3");
-    const somPonto = new Audio(".sons/ponto.mp3");
-    const buzina = new Audio(".sons/buzina.mp3");
+    const somColisao = new Audio("colisao.mp3");
+    const somPonto = new Audio("ponto.mp3");
+    const buzina = new Audio("buzina.mp3");
 
     let carro, obstaculos, pontuacao, dificuldade, velocidadeObstaculo;
     let jogoAtivo = false;
@@ -150,8 +165,12 @@
       clearInterval(intervaloObstaculos);
       intervaloObstaculos = setInterval(() => criarObstaculo(), 1500);
 
+      // Música de fundo sem travar
       musicaFundo.currentTime = 0;
-      musicaFundo.play();
+      musicaFundo.load();
+      musicaFundo.play().catch(err => {
+        console.log("Música de fundo não pôde iniciar automaticamente:", err);
+      });
     }
 
     function reiniciarJogo() {
@@ -212,6 +231,7 @@
         scoreDisplay.textContent = "Pontuação: " + Math.floor(pontuacao);
 
         if (pontuacao >= proximoAvisoPonto) {
+          somPonto.currentTime = 0;
           somPonto.play();
           proximoAvisoPonto += 50;
         }
@@ -226,9 +246,15 @@
       if (e.key === "ArrowRight" && carro.x < canvas.width - carro.width) carro.x += carro.velocidade;
 
       // Tocar buzina com a tecla "B"
-      if (e.key.toLowerCase() === "B") {
+      if (e.key.toLowerCase() === "b") {
         buzina.currentTime = 0;
         buzina.play();
+
+        // Mostrar feedback da buzina
+        buzinaMsg.style.display = "block";
+        setTimeout(() => {
+          buzinaMsg.style.display = "none";
+        }, 500);
       }
     });
 
